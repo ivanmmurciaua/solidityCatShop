@@ -12,7 +12,7 @@ contract CryptoCat is ERC721Full {
 	uint id = 0;
 	
 	// Store cats
-	//string[] public cats;
+	string[] public cats_used;
 
 	// Cats are registered
 	mapping(string => bool) _catExists;
@@ -32,6 +32,7 @@ contract CryptoCat is ERC721Full {
 
 		// Add Cat & used is true
 		_cat4user[id] = _cat;
+		cats_used.push(_cat);
 		_catExists[_cat] = true;
 
 		// Mint a cat with _mint from OZ_ERC721
@@ -46,5 +47,5 @@ contract CryptoCat is ERC721Full {
 		uint _id_ =  _tokensOfOwner(_address)[_idreact];
 		return _cat4user[_id_];
 	}
-	
+
 }

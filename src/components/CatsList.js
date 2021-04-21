@@ -1,12 +1,15 @@
 import React, { Component } from 'react';
 import Web3 from 'web3'
 import './App.css';
+import CryptoCat from '../abis/CryptoCat.json';
 
 class CatsList extends Component {
 
 	constructor(props) {
 	    super(props)
 	    this.state = {
+	    	account : '',
+	    	contract: null,
 		    cats: [
 			      	{ "id": "1", "url": "./images/cat-images/1.jpg" }, 
 					{ "id": "2", "url": "./images/cat-images/2.jpg" }, 
@@ -60,12 +63,51 @@ class CatsList extends Component {
 	    }
 	 }
 
-	 /*mint = (cat) => {
-	    /*this.props.contract.methods.mint(cat).send({ from: this.props.account })
-	    .once('receipt', (receipt) => {
-	      window.alert("😽 Minted!");
-	    })
-	  }*/
+	  async componentWillMount() {
+	    await this.loadWeb3()
+	    await this.loadBlockchainData()
+	  }
+
+	  async loadWeb3() {
+	    if (window.ethereum) {
+	      window.web3 = new Web3(window.ethereum)
+	      await window.ethereum.enable()
+	    }
+	    else if (window.web3) {
+	      window.web3 = new Web3(window.web3.currentProvider)
+	    }
+	    else {
+	      window.alert('Non-Ethereum browser detected. You should consider trying MetaMask!')
+	    }
+	  }
+
+	  async loadBlockchainData() {
+
+	    const web3 = window.web3
+
+	    // Load account
+	    const accounts = await web3.eth.getAccounts()
+	    this.setState({ account: accounts[0] })
+
+	    const networkId = await web3.eth.net.getId()
+	    const networkData = CryptoCat.networks[networkId]
+
+	    if(networkData) {
+	      const abi = CryptoCat.abi
+	      const address = networkData.address
+	      const contract = new web3.eth.Contract(abi, address)
+	      this.setState({ contract : contract })
+	    }
+	    else {
+	      window.alert('Smart contract not deployed to detected network.')
+	    }
+	  }
+
+	
+
+	 mint = (cat) => {
+	    this.state.contract.methods.mint(cat).send({ from: this.state.account });
+	  }
 
 	//Adopt
     handleClick = (e) => {
@@ -84,14 +126,18 @@ class CatsList extends Component {
 	                  	 	alt={cat.id}
 	                  	 />
 	                  </div>
+	                  <form onSubmit={(event) => {
+	                  	event.preventDefault()
+	                 	const catz = cat.id
+	                  	this.mint(catz)
+	                  }}>
 	                  <input
-	                  	id={cat.id}
-	                    type='button'
+	                    type='submit'
 	                    className='btn btn-block btn-primary'
 	                    value='Adopt'
-	                    onClick={this.handleClick}
-	                    style={{ width: '150px', display: 'inline-block' }}
 	                  />
+	                  </form>
+	                  
 	                </div>
 	              )
 	            })}
